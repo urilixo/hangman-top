@@ -9,7 +9,6 @@ class Game
   attr_accessor :game_display, :player
 
   def initialize(dictionary = 'clean_dictionary.txt', lines_in_dictionary = 52_452)
-    @mistakes = 0 #remove this later
     @secret_word = pick_random(dictionary, lines_in_dictionary).downcase.chomp!
     @game_display = Display.new(@secret_word)
     @player = Guesses.new
@@ -17,14 +16,16 @@ class Game
   end
 
   def game_loop
-    until @finished == true
+    loop do
       guess = @player.player_guess
       array_of_indexes = @player.compare_guess(guess, @secret_word)
-      
+
+      break if array_of_indexes == true
 
       @game_display.edit_display(guess, array_of_indexes)
-      #
-      @finished = true if @game_display.display.join == @secret_word
+      break if @game_display.display.join == @secret_word
+
+      @game_display.refresh_display(@player.remaining_guesses, @player.guessed_chars)
       save_game
     end
   end
@@ -65,23 +66,50 @@ class Display
   end
 
   def edit_display(character, array_of_indexes)
+    #binding.pry
     array_of_indexes.each { |index| @display[index] = character }
     print "#{@display.join('')}   #{@guessed_chars}"
     @display
+  end
+
+  def refresh_display(remaining_guesses, guessed_chars)
+    puts `clear`
+    puts draw_stick_figure(remaining_guesses)
+    print "#{@display.join('')} \n\n Previous guesses: #{guessed_chars.join('')}\n\n"
+  end
+  
+  def draw_stick_figure(remaining_guesses)
+    case remaining_guesses
+    when 6
+      "________\n|/     |\n|       \n|\n|\n|"
+    when 5
+      "________\n|/     |\n|      O  \n|\n|\n|"
+    when 4
+      "________\n|/     |\n|      O  \n|      |\n|\n|"
+    when 3
+      "________\n|/     |\n|      O  \n|     /|\n|\n|"
+    when 2
+      "________\n|/     |\n|      O  \n|     /|\\ \n|\n|"
+    when 1
+      "________\n|/     |\n|      O  \n|     /|\\ \n|     / \n|"
+    when 0
+      "________\n|/     |\n|      O  \n|     /|\\ \n|     / \\ \n|"
+    end
   end
 end
 
 class Guesses
   attr_accessor :guessed_chars
+  attr_reader :remaining_guesses
 
   def initialize
-    @remaining_guesses = 12
+    @remaining_guesses = 6
     @guessed_chars = []
   end
 
   def player_guess
     guess = gets.chomp.downcase
-    #return guess if save
+    # return guess if save
     return invalid_guess unless ('a'..'z').include?(guess)
 
     guess
@@ -92,30 +120,30 @@ class Guesses
     array_of_indexes = []
     return already_guessed if @guessed_chars.include?(guess)
 
-    @guessed_chars << guess
     secret.split('').each_with_index { |char, index| array_of_indexes << index if char == guess}
-    #binding.pry
+    @guessed_chars << guess unless secret.include?(guess)
     return array_of_indexes unless array_of_indexes.empty?
 
     wrong_guess(secret)
   end
 
   def wrong_guess(secret)
-    puts "Wrong guess, #{@remaining_guesses} left."
     @remaining_guesses -= 1
-    return [] unless @remaining_guesses < 1
+    return [] unless @remaining_guesses.negative?
 
     puts "You've lost, the word was #{secret} \n"
-    @finished = true
+    true
   end
 
   def already_guessed
     puts "You have already guessed this character \n"
+    sleep 1
     []
   end
 
   def invalid_guess
     puts 'Guesses must be a single character from A to Z'
+    sleep 1
     player_guess
   end
 end
