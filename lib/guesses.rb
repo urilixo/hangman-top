@@ -1,10 +1,12 @@
 class Guesses
+  require 'pry-byebug'
   attr_accessor :guessed_chars
   attr_reader :remaining_guesses
 
-  def initialize
-    @remaining_guesses = 6
-    @guessed_chars = []
+  def initialize(remaining_guesses = 6, guessed_chars = [])
+    @remaining_guesses = remaining_guesses
+    @guessed_chars = guessed_chars
+#    binding.pry
   end
 
   def player_guess
@@ -27,12 +29,16 @@ class Guesses
     wrong_guess(secret)
   end
 
+  private
+
   def wrong_guess(secret)
     @remaining_guesses -= 1
     return [] unless @remaining_guesses.negative?
 
     puts "You've lost, the word was #{secret} \n"
+    sleep 2
     true
+    
   end
 
   def already_guessed
