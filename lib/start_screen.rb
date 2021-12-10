@@ -1,4 +1,4 @@
-require 'game'
+require_relative 'game'
 
 def load_game
 end
