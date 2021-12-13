@@ -24,12 +24,17 @@ class Game
       break if array_of_indexes == true
 
       @game_display.edit_display(guess, array_of_indexes)
-      break if @game_display.display.join.gsub(' ', '') == @secret_word
+      victory and break if @game_display.display.join.gsub(' ', '') == @secret_word
 
       @game_display.refresh_display(@player.remaining_guesses, @player.guessed_chars)
       save_game
     end
     File.delete('save_data.txt') if File.exist?('save_data.txt')
+  end
+
+  def victory
+    puts "\n You won!!! The word was #{@secret_word.split(' ').join}!"
+    sleep 2
   end
 
   def save_game
@@ -56,7 +61,6 @@ class Game
 
   def pick_random(dictionary, lines_in_dictionary)
     random_word = rand(lines_in_dictionary)
-    puts random_word
     File.open(dictionary, 'r') do |file|
       file.each_line.with_index do |line, line_index|
         random_word = line if line_index == random_word
